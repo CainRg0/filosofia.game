@@ -7,7 +7,7 @@
   <style>
     body {
       margin: 0;
-      background: #0a1a3f; /* blu scuro */
+      background: #071019; /* blu scuro */
       color: white;
       font-family: sans-serif;
     }
@@ -26,14 +26,20 @@
       z-index: 9999;
     }
     #menu-box {
-      background: #0d1f35; /* blu scuro menu */
+      background: #0b1a2b; /* blu scuro */
       padding: 26px;
       border-radius: 10px;
       text-align:center;
       box-shadow: 0 6px 24px rgba(0,0,0,0.6);
     }
-    #menu-box h1 { margin: 0 0 8px 0; font-size: 28px; }
-    #menu-box p { margin: 0 0 16px 0; color: #9fb0c6; }
+    #menu-box h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+    }
+    #menu-box p {
+      margin: 0 0 16px 0;
+      color: #9fb0c6;
+    }
     #start-btn {
       background:#1a73e8;
       color:#fff;
@@ -69,7 +75,7 @@
       preload() {
         this.load.image('platone', 'img/platone.png');
         this.load.image('aristotele', 'img/aristotele.png');
-        this.load.image('diogene', 'img/diogene.png');
+        this.load.image('diogene', 'img/diogene.png'); 
         this.load.image('player', 'img/player.png');
       }
 
@@ -77,12 +83,14 @@
         const W = this.sys.game.config.width;
         const H = this.sys.game.config.height;
 
+        // background filosofico
         this.bgGraphics = this.add.graphics().setDepth(-10);
         this.quoteTexts = [];
+
         const quotes = [
           { t: 'La virtù sta nel giusto mezzo.', a: 'Aristotele' },
           { t: 'Conosci te stesso.', a: 'Platone' },
-          { t: 'Eppur si muove.', a: 'Galileo' },
+          { t: 'Vivi con poco.', a: 'Diogene' },
           { t: 'La sapienza comincia nella meraviglia.', a: 'Platone' },
           { t: 'La ragione è la migliore guida.', a: 'Aristotele' }
         ];
@@ -92,7 +100,7 @@
           const txt = this.add.text(
             Phaser.Math.Between(20, W-20),
             Phaser.Math.Between(H+20, H+300),
-            `${q.t} — ${q.a}`,
+            `"${q.t}" — ${q.a}`,
             { fontSize: '16px', fill: '#cfc5a8', fontStyle: 'italic' }
           ).setDepth(-5);
           txt.speed = Phaser.Math.FloatBetween(10, 40);
@@ -100,51 +108,43 @@
           this.quoteTexts.push(txt);
         }
 
-        this.decorGraphics = this.add.graphics().setDepth(-9);
-
+        // player
         this.player = this.physics.add.sprite(100, 200, 'player').setScale(0.5);
         this.physics.world.setBounds(0, 0, 800, 400);
         this.player.setCollideWorldBounds(true);
 
+        // filosofi
         this.philosophers = this.physics.add.staticGroup();
         this.platone = this.philosophers.create(300, 150, 'platone').setScale(0.2);
         this.aristotele = this.philosophers.create(500, 250, 'aristotele').setScale(0.2);
-        this.galileo = this.philosophers.create(700, 150, 'galileo').setScale(0.2);
+        this.diogene = this.philosophers.create(700, 150, 'diogene').setScale(0.2);
 
+        // input
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        this.dialogBg = this.add.rectangle(400, 350, 780, 90, 0x0a1a3f, 0.7).setScrollFactor(0).setVisible(false).setDepth(10);
-        this.dialogBox = this.add.text(20, 320, '', {
-          fontSize: '16px', fill: '#fff', wordWrap: { width: 760 }
-        }).setScrollFactor(0).setVisible(false).setDepth(11);
+        // dialoghi
+        this.dialogBg = this.add.rectangle(400, 350, 780, 90, 0x000000, 0.7)
+          .setScrollFactor(0).setVisible(false).setDepth(10);
+        this.dialogBox = this.add.text(20, 320, '', { fontSize: '16px', fill: '#fff', wordWrap: { width: 760 } })
+          .setScrollFactor(0).setVisible(false).setDepth(11);
 
-        this.statusText = this.add.text(600, 20, '', { fontSize: '16px', fill: '#fff' }).setScrollFactor(0).setDepth(11);
+        this.statusText = this.add.text(600, 20, '', { fontSize: '16px', fill: '#fff' })
+          .setScrollFactor(0).setDepth(11);
 
+        // stato
         this.dialogActive = false;
         this.currentPhilosopher = null;
         this.gameFinished = false;
-        this.recentlyInteracted = { platone: false, aristotele: false, galileo: false };
+        this.recentlyInteracted = { platone: false, aristotele: false, diogene: false };
         this.awaitingAnswer = false;
 
-        this.input.keyboard.on('keydown-V', () => {
-          if (!this.dialogActive || !this.awaitingAnswer || this.gameFinished) return;
-          this.handleAnswer(true);
-        });
-        this.input.keyboard.on('keydown-F', () => {
-          if (!this.dialogActive || !this.awaitingAnswer || this.gameFinished) return;
-          this.handleAnswer(false);
-        });
-        this.input.keyboard.on('keydown-SPACE', () => {
-          if (this.gameFinished) return;
-          if (this.dialogActive && this.quizIndex === -1) {
-            this.quizIndex = 0;
-            this.showQuestion();
-          }
-        });
-        this.input.keyboard.on('keydown-R', () => {
-          if (this.gameFinished) { this.scene.restart(); }
-        });
+        // input risposte
+        this.input.keyboard.on('keydown-V', () => { if (this.dialogActive && this.awaitingAnswer && !this.gameFinished) this.handleAnswer(true); });
+        this.input.keyboard.on('keydown-F', () => { if (this.dialogActive && this.awaitingAnswer && !this.gameFinished) this.handleAnswer(false); });
+        this.input.keyboard.on('keydown-SPACE', () => { if (!this.gameFinished && this.dialogActive && this.quizIndex === -1) { this.quizIndex = 0; this.showQuestion(); } });
+        this.input.keyboard.on('keydown-R', () => { if (this.gameFinished) { this.scene.restart(); } });
 
+        // quiz data
         this.quizData = {
           platone: {
             intro: "Ciao! Sono Platone. Filosofo delle Idee. Vuoi fare un test?",
@@ -162,19 +162,19 @@
               { q: "Aristotele era un filosofo medievale?", a: false }
             ]
           },
-          galileo: {
+          diogene: {
             intro: "Ehi! Io sono Diogene, il cinico. Vivi con poco! Sei pronto?",
             questions: [
               { q: "Diogene viveva in una botte?", a: true },
-              { q: "Diogene amava i beni materiali?", a: true },
-              { q: "Diogene cercava l'uomo con una lanterna?", a: false }
+              { q: "Diogene amava i beni materiali?", a: false },
+              { q: "Diogene cercava l'uomo con una lanterna?", a: true }
             ]
           }
         };
 
         this.quizIndex = 0;
         this.score = 0;
-        this.completedTests = { platone: false, aristotele: false, galileo: false };
+        this.completedTests = { platone: false, aristotele: false, diogene: false };
         this.updateStatus();
         this.bgStart = this.time.now;
       }
@@ -202,10 +202,11 @@
           if (Phaser.Math.Distance.BetweenPoints(this.player, this.aristotele) < 50 && !this.recentlyInteracted.aristotele) {
             this.startDialog('aristotele');
           }
-          if (Phaser.Math.Distance.BetweenPoints(this.player, this.galileo) < 50 && !this.recentlyInteracted.galileo) {
+          if (Phaser.Math.Distance.BetweenPoints(this.player, this.diogene) < 50 && !this.recentlyInteracted.diogene) {
             this.startDialog('diogene');
           }
         }
+
         this.updateQuoteTexts(delta);
       }
 
@@ -216,40 +217,15 @@
         const H = this.sys.game.config.height;
         const t = (time - this.bgStart) / 1000;
 
-        g.fillStyle(0x0a1a3f, 1); // blu scuro principale
+        // sfondo blu scuro
+        g.fillStyle(0x0b1a2b, 1);
         g.fillRect(0,0,W,H);
 
-        g.fillStyle(0x123357, 0.06); // overlay blu
-        g.fillRect(0,0,W,H);
-
+        // colonne
         g.fillStyle(0x1f2933, 0.08);
         for (let i = 0; i < 4; i++) {
           const x = 80 + i * 220 + Math.sin(t*0.3 + i) * 6;
           g.fillRect(x, 20, 40, H-60);
-        }
-
-        g.lineStyle(2, 0x6b8a3d, 0.06);
-        for (let i = 0; i < 3; i++) {
-          const cx = 150 + i*280;
-          const cy = 70;
-          g.beginPath();
-          g.arc(cx + Math.sin(t*0.4 + i)*6, cy + Math.cos(t*0.6 + i)*4, 36, Phaser.Math.DegToRad(180), Phaser.Math.DegToRad(360));
-          g.strokePath();
-        }
-
-        g.lineStyle(1, 0x4a3e2b, 0.03);
-        for (let y = 0; y < H; y += 26) {
-          g.beginPath();
-          g.moveTo(0, y + Math.sin((t*0.4 + y)*0.02)*3);
-          g.lineTo(W, y + Math.sin((t*0.4 + y)*0.02)*3);
-          g.strokePath();
-        }
-
-        for (let k = 0; k < 14; k++) {
-          const px = (k * 97 + (t*30)) % W;
-          const py = 40 + ((k*37) % (H-80)) + Math.sin((px + t*20) * 0.02) * 6;
-          g.fillStyle(0xf7e7c4, 0.06);
-          g.fillCircle(px, py, 2);
         }
       }
 
@@ -259,7 +235,6 @@
         this.quoteTexts.forEach(t => {
           t.y -= t.speed * (delta/1000);
           t.rotation += t.spin * (delta/1000);
-          t.alpha = 0.4 + Math.abs(Math.sin((t.y + Date.now()/1000) * 0.4)) * 0.6;
           if (t.y < -40) {
             t.y = H + Phaser.Math.Between(20, 200);
             t.x = Phaser.Math.Between(20, W-20);
@@ -267,7 +242,6 @@
         });
       }
 
-      // metodi quiz (invariati) ...
       startDialog(name) {
         this.player.setVelocity(0);
         this.dialogActive = true;
@@ -278,25 +252,31 @@
         this.score = 0;
         this.awaitingAnswer = false;
       }
+
       showQuestion() {
         const current = this.quizData[this.currentPhilosopher].questions[this.quizIndex];
         if (!current) return;
         this.dialogBox.setText(current.q + "\nRispondi: V (vero) / F (falso)");
         this.awaitingAnswer = true;
       }
+
       handleAnswer(givenTrue) {
         const current = this.quizData[this.currentPhilosopher].questions[this.quizIndex];
-        if (!current) { this.awaitingAnswer = false; return; }
+        if (!current) return;
         if (current.a === givenTrue) this.score++;
         this.awaitingAnswer = false;
         this.quizIndex++;
         this.showQuestionOrEnd();
       }
+
       showQuestionOrEnd() {
         if (this.quizIndex < this.quizData[this.currentPhilosopher].questions.length) {
           this.showQuestion();
-        } else { this.endQuiz(); }
+        } else {
+          this.endQuiz();
+        }
       }
+
       endQuiz() {
         const total = this.quizData[this.currentPhilosopher].questions.length;
         if (this.score === total) {
@@ -306,13 +286,19 @@
         } else {
           this.dialogBox.setText("Mi dispiace, non hai passato il test con " + this.currentPhilosopher + ". Riprova!");
         }
-        if (this.completedTests.platone && this.completedTests.aristotele && this.completedTests.galileo) {
-          this.dialogBox.setText("Hai superato tutti i test dei filosofi!\n🎉 Congratulazioni, hai completato il gioco!\nPremi R per ricominciare.");
+
+        if (this.completedTests.platone && this.completedTests.aristotele && this.completedTests.diogene) {
+          this.dialogBox.setText("Hai superato tutti i test!\n🎉 Congratulazioni, hai completato il gioco!\nPremi R per ricominciare.");
           this.gameFinished = true;
           return;
         }
-        this.time.delayedCall(2000, () => { if (!this.gameFinished) this.closeDialog(); });
+
+        this.time.delayedCall(2000, () => {
+          if (this.gameFinished) return;
+          this.closeDialog();
+        });
       }
+
       closeDialog() {
         if (this.gameFinished) return;
         if (!this.currentPhilosopher) return;
@@ -329,11 +315,12 @@
         this.time.delayedCall(800, () => { this.recentlyInteracted[name] = false; });
         this.currentPhilosopher = null;
       }
+
       updateStatus() {
         this.statusText.setText(
           `Platone: ${this.completedTests.platone ? "✓" : "✗"}\n` +
           `Aristotele: ${this.completedTests.aristotele ? "✓" : "✗"}\n` +
-          `Galileo: ${this.completedTests.galileo ? "✓" : "✗"}`
+          `Diogene: ${this.completedTests.diogene ? "✓" : "✗"}`
         );
       }
     }
@@ -342,7 +329,7 @@
       type: Phaser.AUTO,
       width: 800,
       height: 400,
-      backgroundColor: '#0a1a3f', // blu scuro anche qui
+      backgroundColor: '#0b1a2b',
       physics: { default: 'arcade', arcade: { debug: false } },
       scene: [MainScene]
     };
@@ -363,10 +350,6 @@
     });
   </script>
 
-  <div class="info-bottom">
-    Controlli: Frecce / V-F per vero/falso
-    Su mobile: usa i bottoni in basso.
-  </div>
+  <div class="info-bottom">Controlli: Frecce / V-F per vero/falso / R per restart</div>
 </body>
 </html>
-
