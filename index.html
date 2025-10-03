@@ -69,7 +69,7 @@
       preload() {
         this.load.image('platone', 'img/platone.png');
         this.load.image('aristotele', 'img/aristotele.png');
-        this.load.image('galileo', 'img/galileo.png');
+        this.load.image('diogene', 'img/diogene.png');
         this.load.image('player', 'img/player.png');
       }
 
@@ -163,11 +163,11 @@
             ]
           },
           galileo: {
-            intro: "Sono Galileo Galilei. Studio il cielo con il mio telescopio. Pronto a verificare le idee?",
+            intro: "Ehi! Io sono Diogene, il cinico. Vivi con poco! Sei pronto?",
             questions: [
-              { q: "Galileo osservò le lune di Giove con il telescopio?", a: true },
-              { q: "Galileo fu processato per le sue scoperte astronomiche?", a: true },
-              { q: "Galileo era contemporaneo di Platone?", a: false }
+              { q: "Diogene viveva in una botte?", a: true },
+              { q: "Diogene amava i beni materiali?", a: true },
+              { q: "Diogene cercava l'uomo con una lanterna?", a: false }
             ]
           }
         };
@@ -203,7 +203,7 @@
             this.startDialog('aristotele');
           }
           if (Phaser.Math.Distance.BetweenPoints(this.player, this.galileo) < 50 && !this.recentlyInteracted.galileo) {
-            this.startDialog('galileo');
+            this.startDialog('diogene');
           }
         }
         this.updateQuoteTexts(delta);
@@ -364,7 +364,9 @@
   </script>
 
   <div class="info-bottom">
-    Controlli: Frecce / V-F per vero/falso / A-C per scelta multipla. Su mobile: usa i bottoni in basso.
+    Controlli: Frecce / V-F per vero/falso
+    Su mobile: usa i bottoni in basso.
   </div>
 </body>
 </html>
+
